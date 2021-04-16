@@ -1,7 +1,7 @@
 import csv
 import sqlite3
 # 讀取資料庫
-mydb = sqlite3.connect("TaxNo.db")
+mydb = sqlite3.connect(".var/TaxNo.db")
 cursor = mydb.cursor()
 cursor.execute("SELECT taxNo FROM Company WHERE companyName='千佰億彩券行'")
 for row in cursor:

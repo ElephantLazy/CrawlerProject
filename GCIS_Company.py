@@ -14,7 +14,7 @@ def crawlerCompany(index):
         try:
             startRandom = random.randint(1, 3)
             # 讀取資料庫
-            mydb = sqlite3.connect("Company"+str(index)+".db")
+            mydb = sqlite3.connect("./var/Company"+str(index)+".db")
             cursor = mydb.cursor()
             cursor.execute("SELECT value FROM GCIS_Company WHERE key='pageIndex'")
             for row in cursor:

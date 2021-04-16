@@ -11,7 +11,7 @@ def crawlerFactory():
     while True:
         try:
             # 讀取資料庫
-            mydb = sqlite3.connect("Factory.db")
+            mydb = sqlite3.connect(".var/Factory.db")
             cursor = mydb.cursor()
             cursor.execute("SELECT value FROM GCIS_Factory WHERE key='pageIndex'")
             for row in cursor:
