@@ -34,8 +34,8 @@ def crawlerCompany(index):
                 selectIndex = int(row[0])
 
             options = Options()
-            options.add_argument('--headless')  #規避google bug
-            options.add_argument('--disable-gpu')
+            # options.add_argument('--headless') 
+            # options.add_argument('--disable-gpu')
             chrome = webdriver.Chrome('./chromedriver', chrome_options=options)
             chrome.get(
                 "https://findbiz.nat.gov.tw/fts/query/QueryBar/queryInit.do;jsessionid=6AC3B69556A77E80B2D953B9C94F6B81")
