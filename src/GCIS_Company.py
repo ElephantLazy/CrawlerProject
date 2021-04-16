@@ -12,7 +12,7 @@ import random
 def crawlerCompany(index):
     while True:
         try:
-            startRandom = random.randint(1, 3)
+            startRandom = random.randint(1, 5)
             # 讀取資料庫
             mydb = sqlite3.connect("../var/Company"+str(index)+".db")
             cursor = mydb.cursor()
@@ -36,6 +36,7 @@ def crawlerCompany(index):
             options = Options()
             # options.add_argument('--headless') 
             # options.add_argument('--disable-gpu')
+            time.sleep(startRandom)
             chrome = webdriver.Chrome('./chromedriver', chrome_options=options)
             chrome.get(
                 "https://findbiz.nat.gov.tw/fts/query/QueryBar/queryInit.do;jsessionid=6AC3B69556A77E80B2D953B9C94F6B81")
