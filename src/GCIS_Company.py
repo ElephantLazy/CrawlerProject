@@ -12,7 +12,7 @@ import random
 def crawlerCompany(index):
     while True:
         try:
-            startRandom = random.randint(1, 5)
+            startRandom = random.randint(1, 60)
             # 讀取資料庫
             mydb = sqlite3.connect("../var/Company"+str(index)+".db")
             cursor = mydb.cursor()
@@ -76,7 +76,7 @@ def crawlerCompany(index):
                         time.sleep(1)
                         # 送出搜尋
                         js = "sendQueryList()"
-                        time.sleep(startRandom)
+                        time.sleep(1)
                         chrome.execute_script(js)
                         # 取得分頁數量
                         pageSoup = BeautifulSoup(chrome.page_source, 'html.parser')
