@@ -46,7 +46,7 @@ def crawlerCompany(index):
             checkBoxs[1].click()
             # 獲取登記現況選項
             statusBoxs = chrome.find_elements_by_name("isAlive")
-            time.sleep(1)
+            time.sleep(2)
             statusBoxs[0].click()
             js = "javascript:toggleAdvSearch('turnOn')"
             chrome.execute_script(js)
@@ -73,10 +73,10 @@ def crawlerCompany(index):
                     for selectIndex in range(selectIndex, len(select.options), 1):
                         select = Select(chrome.find_element_by_id('busiItemSub'))
                         select.select_by_index(selectIndex)
-                        time.sleep(1)
+                        time.sleep(2)
                         # 送出搜尋
                         js = "sendQueryList()"
-                        time.sleep(1)
+                        time.sleep(2)
                         chrome.execute_script(js)
                         # 取得分頁數量
                         pageSoup = BeautifulSoup(chrome.page_source, 'html.parser')
@@ -89,7 +89,7 @@ def crawlerCompany(index):
                             for i in range(pageIndex, pageCount+1, 1):
                                 if(pageCount > 1):
                                     js = "gotoPage("+str(i)+");"
-                                    time.sleep(1)
+                                    time.sleep(2)
                                     chrome.execute_script(js)
                                 # 取得單頁所有公司詳細資訊
                                 factorySoup = BeautifulSoup(
@@ -136,30 +136,8 @@ def crawlerCompany(index):
                                             if(companyDetail[c].text == '最後核准變更日期'):
                                                 paperYear = companyDetail[c+1].text.lstrip(
                                                 ).rstrip()
-
-                                        # 寫入excel
-                                        # fn = 'GCIS_Company.xlsx'
-                                        # wb = openpyxl.load_workbook(fn)
-                                        # wb.active = 0
-                                        # ws = wb.active
-                                        # newRow = ws.max_row+1
-                                        # ws.cell(
-                                        #     column=1, row=newRow).value = companyName
-                                        # ws.cell(
-                                        #     column=2, row=newRow).value = companyTaxNo
-                                        # ws.cell(
-                                        #     column=3, row=newRow).value = companyStatus
-                                        # ws.cell(
-                                        #     column=4, row=newRow).value = companyCapital
-                                        # ws.cell(
-                                        #     column=5, row=newRow).value = companyPerson
-                                        # ws.cell(
-                                        #     column=6, row=newRow).value = companyAddress
-                                        # ws.cell(column=7, row=newRow).value = paperYear
-                                        # wb.save(fn)
-
-                                        #Write to DB
-                                        
+                                                
+                                        #Write to DB                                       
                                         cursor.execute(
                                             "INSERT INTO CompanyData VALUES ('"+companyName+"','"+companyTaxNo+"','"+companyStatus+"','"+companyCapital+"','"+companyPerson+"','"+companyAddress+"','"+paperYear+"','');")                                   
                                         mydb.commit()
@@ -210,6 +188,7 @@ def crawlerCompany(index):
                             str(cityIndex+5)+" where key='cityIndex'")
                 mydb.commit()
         finally:
+            time.sleep(5)
             if('chrome' in globals()):
                 chrome.quit()
     
