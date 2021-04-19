@@ -9,7 +9,7 @@ def CheckTaxNo():
     while True:
         try:
             # 讀取資料庫
-            mydb = sqlite3.connect("../Factory.db")
+            mydb = sqlite3.connect("../var/Factory.db")
             cursor = mydb.cursor()
             cursor.execute("SELECT FactoryTaxNo FROM FactoryData WHERE NeedSearch=0")
             cursor2 = mydb.cursor()

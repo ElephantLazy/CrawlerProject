@@ -8,11 +8,18 @@ import sqlite3
 from retrying import retry
 import concurrent.futures
 import random
+from fake_useragent import UserAgent
+import requests
+from requests.adapters import HTTPAdapter
 @retry
 def crawlerCompany(index):
     while True:
         try:
-            startRandom = random.randint(1, 60)
+            s = requests.Session()
+            s.mount('http://', HTTPAdapter(max_retries=5))
+            s.mount('https://', HTTPAdapter(max_retries=5))
+            startRandom = random.randint(1, 10)
+            searchRandom = random.randint(2, 5)
             # 讀取資料庫
             mydb = sqlite3.connect("../var/Company"+str(index)+".db")
             cursor = mydb.cursor()
@@ -36,14 +43,11 @@ def crawlerCompany(index):
             options = Options()
             # options.add_argument('--headless') 
             # options.add_argument('--disable-gpu')
-            time.sleep(startRandom)
+            # time.sleep(startRandom)
             chrome = webdriver.Chrome('./chromedriver', chrome_options=options)
             chrome.get(
                 "https://findbiz.nat.gov.tw/fts/query/QueryBar/queryInit.do;jsessionid=6AC3B69556A77E80B2D953B9C94F6B81")
             chrome.implicitly_wait(60)
-            # 獲取資料種類選項
-            checkBoxs = chrome.find_elements_by_name("qryType")
-            checkBoxs[1].click()
             # 獲取登記現況選項
             statusBoxs = chrome.find_elements_by_name("isAlive")
             time.sleep(2)
@@ -57,8 +61,9 @@ def crawlerCompany(index):
             mainSelect = Select(chrome.find_element_by_id('busiItemMain'))
             mainSelectCount = len(mainSelect.options)
             isFirstCycle = True
-            for cityIndex in range(cityIndex, 22, 5):
+            for cityIndex in range(cityIndex, 22, 1):
                 cityBoxs = chrome.find_elements_by_name("city")
+                time.sleep(searchRandom)
                 cityBoxs[cityIndex].click()
                 if(isFirstCycle == False):
                     cityBoxs[cityIndex-5].click()
@@ -66,22 +71,24 @@ def crawlerCompany(index):
                 # 走訪所營事業
                 for mainSelectIndex in range(mainSelectIndex, len(mainSelect.options), 1):
                     mainSelect = Select(chrome.find_element_by_id('busiItemMain'))
+                    time.sleep(searchRandom)
                     mainSelect.select_by_index(mainSelectIndex)
                     select = Select(chrome.find_element_by_id('busiItemSub'))
                     selectCount = len(select.options)
                     # 走訪所營事業細項
                     for selectIndex in range(selectIndex, len(select.options), 1):
                         select = Select(chrome.find_element_by_id('busiItemSub'))
+                        time.sleep(searchRandom)
                         select.select_by_index(selectIndex)
-                        time.sleep(2)
                         # 送出搜尋
                         js = "sendQueryList()"
-                        time.sleep(2)
+                        time.sleep(searchRandom)
                         chrome.execute_script(js)
                         # 取得分頁數量
                         pageSoup = BeautifulSoup(chrome.page_source, 'html.parser')
                         pageInfo = pageSoup.find_all('div', {
-                            'style': 'float:left'})
+                            'style': 'float:left'})        
+
                         if(len(pageInfo) > 0):
                             startIndex = pageInfo[0].text.find('分')
                             endIndex = pageInfo[0].text.find('頁')
@@ -94,57 +101,35 @@ def crawlerCompany(index):
                                 # 取得單頁所有公司詳細資訊
                                 factorySoup = BeautifulSoup(
                                     chrome.page_source, 'html.parser')
-                                factoryInfos = factorySoup.find_all(
-                                    'span', {'class': 'moreLinkMouseOut'})
+                                factoryInfos=factorySoup.find_all(
+                                    'div', {'class': 'panel panel-default'})
                                 currentInfoIndex = 0
-                                for f in factoryInfos:
+                                oldTaxNo=""
+                                for f in factoryInfos:                                   
                                     if(currentInfoIndex >= infoPageIndex-1):
-                                        # 進入詳細資訊頁面
-                                        js = f.get("onclick")
-                                        time.sleep(2)
-                                        chrome.execute_script(js)
-                                        # 取得頁面資訊
-                                        companyDetailSoup = BeautifulSoup(
-                                            chrome.page_source, 'html.parser')
-                                        companyDetail = companyDetailSoup.find_all(
-                                            'td')
-                                        for c in range(0, 35, 1):
-                                            if(companyDetail[c].text == '統一編號'):
-                                                companyTaxNo = companyDetail[c+1].text.lstrip().rstrip()[
-                                                    0:8]
-                                            if(companyDetail[c].text == '公司名稱'):
-                                                endIndex = companyDetail[c+1].text.lstrip().find(
-                                                    '\n')
-                                                companyName = companyDetail[c +
-                                                                            1].text[0:endIndex]
-                                            if(companyDetail[c].text == '公司所在地'):
-                                                endIndex = companyDetail[c+1].text.lstrip().find(
-                                                    '\n')
-                                                companyAddress = companyDetail[c+1].text.lstrip(
-                                                ).rstrip()[0:endIndex]
-                                            if(companyDetail[c].text == '代表人姓名'):
-                                                companyPerson = companyDetail[c+1].text.lstrip(
-                                                ).rstrip()
-                                            if(companyDetail[c].text == '資本總額(元)'):
-                                                companyCapital = companyDetail[c+1].text.lstrip(
-                                                ).rstrip()
-                                            if(companyDetail[c].text == '公司狀況'):
-                                                endIndex = companyDetail[c+1].text.lstrip().find(
-                                                    '\n')
-                                                companyStatus = companyDetail[c+1].text.lstrip(
-                                                ).rstrip()[0:endIndex]
-                                            if(companyDetail[c].text == '最後核准變更日期'):
-                                                paperYear = companyDetail[c+1].text.lstrip(
-                                                ).rstrip()
-                                                
-                                        #Write to DB                                       
-                                        cursor.execute(
-                                            "INSERT INTO CompanyData VALUES ('"+companyName+"','"+companyTaxNo+"','"+companyStatus+"','"+companyCapital+"','"+companyPerson+"','"+companyAddress+"','"+paperYear+"','');")                                   
-                                        mydb.commit()
-
-                                        # 返回上一頁
-                                        js = "javascript:history.back();"
-                                        chrome.execute_script(js)
+                                        #取得統編
+                                        startIndex = f.text.find('統一編號：')
+                                        searchTaxNo=""
+                                        searchTaxNo=f.text[startIndex+5:startIndex+13]
+                                        newTaxNo=searchTaxNo
+                                        if(newTaxNo==oldTaxNo):
+                                            print("重複資料")
+                                        oldTaxNo=searchTaxNo
+                                        # 取得公司資訊
+                                        time.sleep(0.3)
+                                        r = s.get('http://data.gcis.nat.gov.tw/od/data/api/5F64D864-61CB-4D0D-8AD9-492047CC1EA6?$format=json&$filter=Business_Accounting_NO eq '+searchTaxNo+'&$skip=0&$top=50', timeout=3)
+                                        if(len(r.text)>0):
+                                            companyTaxNo=searchTaxNo
+                                            companyName=r.json()[0]['Company_Name']
+                                            companyAddress=r.json()[0]['Company_Location'] 
+                                            companyPerson=r.json()[0]['Responsible_Name']                                            
+                                            companyCapital=str(format(r.json()[0]['Capital_Stock_Amount'],","))                                        
+                                            companyStatus=r.json()[0]['Company_Status_Desc']                                            
+                                            paperYear=r.json()[0]['Change_Of_Approval_Data']                                                                                               
+                                            #Write to DB                                       
+                                            cursor.execute(
+                                                "INSERT INTO CompanyData VALUES ('"+companyName+"','"+companyTaxNo+"','"+companyStatus+"','"+companyCapital+"','"+companyPerson+"','"+companyAddress+"','"+paperYear+"','');")                                   
+                                            mydb.commit()
                                         infoPageIndex += 1
                                         # 更新infoPageIndex
                                         cursor.execute("UPDATE GCIS_Company set value =" +
@@ -185,17 +170,19 @@ def crawlerCompany(index):
                 mainSelectIndex = 1
                 # 更新cityIndex
                 cursor.execute("UPDATE GCIS_Company set value =" +
-                            str(cityIndex+5)+" where key='cityIndex'")
+                            str(cityIndex+1)+" where key='cityIndex'")
                 mydb.commit()
+        except Exception as e:
+            print(e)
         finally:
             time.sleep(5)
-            if('chrome' in globals()):
-                chrome.quit()
+            chrome.quit()
     
 
 
 if __name__ == '__main__':
-    indexs = [0, 1, 2, 3, 4]
-    # 同時建立及啟用5個執行緒
-    with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
-        executor.map(crawlerCompany, indexs)
+    crawlerCompany(0)
+    # indexs = [0,1,2,3,4]
+    # # 同時建立及啟用5個執行緒
+    # with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+    #     executor.map(crawlerCompany, indexs)
