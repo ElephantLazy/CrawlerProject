@@ -61,110 +61,115 @@ def Crwler104():
                         'a', {'class': 'a2', 'target': '_blank'})
                     chekHaveJobSoup= allJobSoup.find_all(
                         'div', {'class': 'm-box w-resultBox'})
-                    
-                    # 走訪此頁所有公司資訊
-                    currentCompanyPageInfoIndex = 1
-                    cIndex=0
-                    for c in companys:
-                        
-                        if(currentCompanyPageInfoIndex >= companyPageInfoIndex):
-                            # 開啟公司資訊分頁
-                            js = "window.open('"+c.get_attribute('href')+"')"
-                            chrome.execute_script(js)
-                            # 切換窗口
-                            allHandles = chrome.window_handles
-                            routeWindowHandle = 0
-                            routeTitle = 'None'
-                            oringalHandles = allHandles[0]
-                            newHandles = allHandles[1]
-                            chrome.switch_to_window(newHandles)
-                            routeTitle = chrome.title
-                            # 取得公司資訊
-                            companySoup = BeautifulSoup(
-                                chrome.page_source, 'html.parser')
-                            companyInfos = companySoup.find_all(
-                                'span', {'class': 'condition'})
-                            companyName = chrome.find_element_by_xpath(
-                                "/html/body/div[3]/div[1]/div/h1").text
-                            industry = companyInfos[0].text.strip()
-                            employeeCount = companyInfos[1].text.strip()
-                            captial = companyInfos[2].text.strip()
-                            contactPerson = companyInfos[3].text.strip()
-                            address = companyInfos[4].text.strip()
-                            companyUrl=''
-                            if(len(companyInfos)>7):
-                                companyUrl = companyInfos[7].text.strip()
-                            # 查詢統編
-                            taxNo=""
-                            cursor.execute(
-                                "SELECT taxNo FROM Company WHERE companyName Like '%"+companyName+"%'")
-                            for row in cursor:
-                                taxNo = str(row[0])
-                          
-                            if('目前暫無工作機會' not in chekHaveJobSoup[cIndex].text):
-                                # 連結至所有工作機會
-                                jobUrl = "http://www.104.com.tw"
-                                jobUrl += allJobList[cIndex]['href']
-                                chrome.get(jobUrl)
-                                # 撈取所有工作機會
-                                jobSoup = BeautifulSoup(
+                    if(len(allJobList)>0):
+                        # 走訪此頁所有公司資訊
+                        currentCompanyPageInfoIndex = 1
+                        cIndex=0
+                        for c in companys:                     
+                            if(currentCompanyPageInfoIndex >= companyPageInfoIndex):
+                                # 開啟公司資訊分頁
+                                js = "window.open('"+c.get_attribute('href')+"')"
+                                chrome.execute_script(js)
+                                # 切換窗口
+                                allHandles = chrome.window_handles
+                                routeWindowHandle = 0
+                                routeTitle = 'None'
+                                oringalHandles = allHandles[0]
+                                newHandles = allHandles[1]
+                                chrome.switch_to_window(newHandles)
+                                routeTitle = chrome.title
+                                # 取得公司資訊
+                                companySoup = BeautifulSoup(
                                     chrome.page_source, 'html.parser')
-                                # 取得頁數資訊page
-                                page = jobSoup.find_all(
-                                    'div', {'class': 'w-pager'})
-                                startIndex=page[0].text.find('下')
-                                totalPage='1'
-                                if(len(page[0].text)>14):
-                                    totalPage=page[0].text[startIndex-2:startIndex]
-                                elif(len(page[0].text)>1):
-                                    totalPage=page[0].text[startIndex-1:startIndex]
-                                    
+                                companyInfos = companySoup.find_all(
+                                    'span', {'class': 'condition'})
+                                companyName = chrome.find_element_by_xpath(
+                                    "/html/body/div[3]/div[1]/div/h1").text
+                                industry = companyInfos[0].text.strip()
+                                employeeCount = companyInfos[1].text.strip()
+                                captial = companyInfos[2].text.strip()
+                                contactPerson = companyInfos[3].text.strip()
+                                address = companyInfos[4].text.strip()
+                                companyUrl=''
+                                if(len(companyInfos)>7):
+                                    companyUrl = companyInfos[7].text.strip()
+                                # 查詢統編
+                                taxNo=""
+                                searchCompanyName=companyName.split("_")
+                                for sc in searchCompanyName:
+                                    taxNo=""
+                                    cursor.execute(
+                                        "SELECT taxNo FROM Company WHERE companyName Like '%"+sc+"%'")
+                                    for row in cursor:
+                                        taxNo = str(row[0])
+                                    if(taxNo!=""):
+                                        break
+
                             
-                                currentJobInfoIndex = 1           
-                                chrome.get(jobUrl)
-                                isFirstPage=True
-                                for p in range(1,int(totalPage)+1,1):  
-                                    cboxClose=chrome.find_element_by_id('cboxClose')
-                                    if(cboxClose.text=="close"):
-                                        ac = ActionChains(chrome)
-                                        ac.move_to_element(cboxClose).move_by_offset(x_offset, y_offset).click().perform()
-                                    if(isFirstPage==False):
-                                        time.sleep(1)
-                                        nextPage=chrome.find_element_by_link_text('下一頁 »')
-                                        nextPage.click()
-                                    isFirstPage=False
+                                if('目前暫無工作機會' not in chekHaveJobSoup[cIndex].text):
+                                    # 連結至所有工作機會
+                                    jobUrl = "http://www.104.com.tw"
+                                    jobUrl += allJobList[cIndex]['href']
+                                    chrome.get(jobUrl)
                                     # 撈取所有工作機會
                                     jobSoup = BeautifulSoup(
-                                    chrome.page_source, 'html.parser')
-                                    jobInfos = jobSoup.find_all(
-                                    'div', {'itemtype': 'http://schema.org/JobPosting'})
-                                    titleInfos= jobSoup.find_all(
-                                        'span', {'itemprop': 'title'})
-                                    datePostedInfos= jobSoup.find_all(
-                                        'span', {'itemprop': 'datePosted'})
-                                    tIndex=0 
-                                    
-                                    for j in jobInfos:                    
-                                        jobTitle = str(titleInfos[tIndex].text).replace('"', "")
-                                        jobTitle.strip("'")
-                                        jobDate = datePostedInfos[tIndex].text 
-                                        tIndex+=1                   
-                                        # 寫入DB
-                                        cursor.execute("Insert into Jobs Values('"+companyName+"','"+taxNo+"','"+industry+"','"+contactPerson+"','"+captial+"','"+employeeCount+"','"+address+"','"+jobTitle+" "+jobDate+"','"+companyUrl+"')")
-                                        mydb.commit()
-                                    time.sleep(0.5)                                                      
-                                chrome.close()
-                                chrome.switch_to_window(oringalHandles)
-                            cIndex+=1
-                            companyPageInfoIndex += 1
-                            # 更新companyPageInfoIndex
-                            cursor.execute("UPDATE CrawlerInfos set value =" +
-                                        str(companyPageInfoIndex)+" where key='companyPageInfoIndex'")
-                            mydb.commit()
-                        else:
-                            if('目前暫無工作機會' not in chekHaveJobSoup[cIndex].text):
+                                        chrome.page_source, 'html.parser')
+                                    # 取得頁數資訊page
+                                    page = jobSoup.find_all(
+                                        'div', {'class': 'w-pager'})
+                                    startIndex=page[0].text.find('下')
+                                    totalPage='1'
+                                    if(len(page[0].text)>14):
+                                        totalPage=page[0].text[startIndex-2:startIndex]
+                                    elif(len(page[0].text)>1):
+                                        totalPage=page[0].text[startIndex-1:startIndex]
+                                        
+                                
+                                    currentJobInfoIndex = 1           
+                                    chrome.get(jobUrl)
+                                    isFirstPage=True
+                                    for p in range(1,int(totalPage)+1,1):  
+                                        cboxClose=chrome.find_element_by_id('cboxClose')
+                                        if(cboxClose.text=="close"):
+                                            ac = ActionChains(chrome)
+                                            ac.move_to_element(cboxClose).move_by_offset(x_offset, y_offset).click().perform()
+                                        if(isFirstPage==False):
+                                            time.sleep(1)
+                                            nextPage=chrome.find_element_by_link_text('下一頁 »')
+                                            nextPage.click()
+                                        isFirstPage=False
+                                        # 撈取所有工作機會
+                                        jobSoup = BeautifulSoup(
+                                        chrome.page_source, 'html.parser')
+                                        jobInfos = jobSoup.find_all(
+                                        'div', {'itemtype': 'http://schema.org/JobPosting'})
+                                        titleInfos= jobSoup.find_all(
+                                            'span', {'itemprop': 'title'})
+                                        datePostedInfos= jobSoup.find_all(
+                                            'span', {'itemprop': 'datePosted'})
+                                        tIndex=0 
+                                        
+                                        for j in jobInfos:                    
+                                            jobTitle = str(titleInfos[tIndex].text).replace('"', "")
+                                            jobTitle.strip("'")
+                                            jobDate = datePostedInfos[tIndex].text 
+                                            tIndex+=1                   
+                                            # 寫入DB
+                                            cursor.execute("Insert into Jobs Values('"+companyName+"','"+taxNo+"','"+industry+"','"+contactPerson+"','"+captial+"','"+employeeCount+"','"+address+"','"+jobTitle+" "+jobDate+"','"+companyUrl+"')")
+                                            mydb.commit()
+                                        time.sleep(0.5)                                                      
+                                    chrome.close()
+                                    chrome.switch_to_window(oringalHandles)
                                 cIndex+=1
-                        currentCompanyPageInfoIndex += 1        
+                                companyPageInfoIndex += 1
+                                # 更新companyPageInfoIndex
+                                cursor.execute("UPDATE CrawlerInfos set value =" +
+                                            str(companyPageInfoIndex)+" where key='companyPageInfoIndex'")
+                                mydb.commit()
+                            else:
+                                if('目前暫無工作機會' not in chekHaveJobSoup[cIndex].text):
+                                    cIndex+=1
+                            currentCompanyPageInfoIndex += 1        
                     
                     #下一頁
                     companyPageNext = chrome.find_element_by_link_text('下一頁 »')

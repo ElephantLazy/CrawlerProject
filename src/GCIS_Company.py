@@ -66,7 +66,7 @@ def crawlerCompany(index):
                 time.sleep(searchRandom)
                 cityBoxs[cityIndex].click()
                 if(isFirstCycle == False):
-                    cityBoxs[cityIndex-5].click()
+                    cityBoxs[cityIndex-1].click()
                 isFirstCycle = False
                 # 走訪所營事業
                 for mainSelectIndex in range(mainSelectIndex, len(mainSelect.options), 1):
