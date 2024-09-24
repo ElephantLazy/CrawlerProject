@@ -6,10 +6,10 @@ mydb = sqlite3.connect("./var/db1.db")
 cursor = mydb.cursor()
 
 # 開啟工作簿
-wb = openpyxl.load_workbook('D:\CrawlerProject-main\src\data.xlsx')
+wb = openpyxl.load_workbook(r'D:\CrawlerProject-main\src\20240920.xlsx')
 
 # 獲取表單
-sh = wb['BGMOPEN1']
+sh = wb['工作表1']
 
 # 獲取最大行數
 print(sh.max_row)
@@ -23,7 +23,7 @@ rows = sh.rows
 # 資料庫計數器
 db_counter = 1
 # 資料庫最大筆數
-max_records_per_db = 7468
+max_records_per_db = 5724
 # 目前處理的筆數
 record_count = 0
 
@@ -39,9 +39,9 @@ for row in list(rows):
         row[2].value if row[2].value is not None else '',
         row[3].value if row[3].value is not None else '',
         row[4].value if row[4].value is not None else '',
-        row[5].value if row[5].value is not None else '',
-        row[6].value if row[6].value is not None else '',
-        row[7].value if row[7].value is not None else '',
+        '',
+        '',
+        '',
         '',
         '',
         '',
