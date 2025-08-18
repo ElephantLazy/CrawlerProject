@@ -198,7 +198,7 @@ threads = []
 
 # 启动多个线程，每个线程处理一个数据库文件
 for i in range(1, 16):
-    db_filename = f"D:/CrawlerProject-main/var/db{i}.db"
+    db_filename = f"D:/workspace/CrawlerProject/var/db{i}.db"
     thread = threading.Thread(target=process_database, args=(db_filename,i))
     threads.append(thread)
     thread.start()

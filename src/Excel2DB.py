@@ -5,11 +5,15 @@ import openpyxl
 mydb = sqlite3.connect("./var/db1.db")
 cursor = mydb.cursor()
 
+# 清空資料庫中的舊資料
+cursor.execute("DELETE FROM CrawlerData")
+mydb.commit()
+
 # 開啟工作簿
-wb = openpyxl.load_workbook(r'D:\CrawlerProject-main\src\20240920.xlsx')
+wb = openpyxl.load_workbook(r'D:\workspace\CrawlerProject\src\20250806.xlsx')
 
 # 獲取表單
-sh = wb['工作表1']
+sh = wb['BGMOPEN1 (3)']
 
 # 獲取最大行數
 print(sh.max_row)
@@ -23,7 +27,7 @@ rows = sh.rows
 # 資料庫計數器
 db_counter = 1
 # 資料庫最大筆數
-max_records_per_db = 5724
+max_records_per_db = 29068
 # 目前處理的筆數
 record_count = 0
 
@@ -39,15 +43,15 @@ for row in list(rows):
         row[2].value if row[2].value is not None else '',
         row[3].value if row[3].value is not None else '',
         row[4].value if row[4].value is not None else '',
-        '',
-        '',
-        '',
-        '',
-        '',
-        '',
-        '',
-        '',
-        '',
+        row[5].value if row[4].value is not None else '',
+        row[6].value if row[4].value is not None else '',
+        row[7].value if row[4].value is not None else '',
+        row[8].value if row[4].value is not None else '',
+        row[9].value if row[4].value is not None else '',
+        row[10].value if row[4].value is not None else '',
+        row[11].value if row[4].value is not None else '',
+        row[12].value if row[4].value is not None else '',
+        row[13].value if row[4].value is not None else '',
         '',
         ''
     )
@@ -63,6 +67,9 @@ for row in list(rows):
         if db_counter <= 15:
             mydb = sqlite3.connect(f"./var/db{db_counter}.db")
             cursor = mydb.cursor()
+            # 清空新資料庫中的舊資料
+            cursor.execute("DELETE FROM CrawlerData")
+            mydb.commit()
             record_count = 0
 
 # 確保最後一批資料被儲存
